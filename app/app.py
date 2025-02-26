@@ -71,7 +71,6 @@ async def login_page(request: Request):
     return HTMLResponse(content=read_html("./static/login.html"))
 
 
-
 @app.post("/login")
 async def login(request: Request):
     """Validate credentials and create a new session if valid"""
@@ -95,9 +94,8 @@ async def login(request: Request):
     return response
 
 
-
 @app.post("/logout")
-async def logout():
+async def logout(request: Request):
     """Clear session and redirect to login page"""
     # TODO: 8. Create redirect response to /login
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
