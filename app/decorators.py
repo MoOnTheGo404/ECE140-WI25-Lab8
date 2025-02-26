@@ -37,65 +37,54 @@ def auth_required(func: Callable) -> Callable:
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             # Extract request from args or kwargs
-            request = None
-            for arg in args:
-                if isinstance(arg, Request):
-                    request = arg
-                    break
-            
-            if not request and 'request' in kwargs:
-                request = kwargs['request']
-            
+            request = next((arg for arg in args if isinstance(arg, Request)), kwargs.get('request', None))
             if not request:
                 raise HTTPException(status_code=500, detail="Request object not found in function arguments")
-            
-            # Get response from kwargs or create new one
-            response = kwargs.get('response', None)
-            
+
             # Check if user is authenticated
+            session_id = request.cookies.get("sessionId")
+            if not session_id:
+                return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
             
-            
+            session = await get_session(session_id)
+            if not session:
+                return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
             # Set user in request state for later access
-            #request.state.user = 
-            
-            # Extend session
-            
-            
+            user = await get_user_by_id(session["user_id"])
+            request.state.user = user
+
+            # Extend session (optional: update timestamp if needed)
+
             # Continue with the original function
             return await func(*args, **kwargs)
         
         return async_wrapper
     else:
         @wraps(func)
-        async def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args, **kwargs):
             # Extract request from args or kwargs
-            request = None
-            for arg in args:
-                if isinstance(arg, Request):
-                    request = arg
-                    break
-            
-            if not request and 'request' in kwargs:
-                request = kwargs['request']
-            
+            request = next((arg for arg in args if isinstance(arg, Request)), kwargs.get('request', None))
             if not request:
                 raise HTTPException(status_code=500, detail="Request object not found in function arguments")
-            
-            # Get response from kwargs or create new one
-            response = kwargs.get('response', None)
-            
+
             # Check if user is authenticated
-            
-            
+            session_id = request.cookies.get("sessionId")
+            if not session_id:
+                return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+            session = get_session(session_id)  # Assuming sync support or wrap in asyncio.run if needed
+            if not session:
+                return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
             # Set user in request state for later access
-            #request.state.user = 
-            
-            # Extend session
-            
-            
+            user = get_user_by_id(session["user_id"])
+            request.state.user = user
+
+            # Extend session (optional: update timestamp if needed)
+
             # Continue with the original function
             return func(*args, **kwargs)
         
         return sync_wrapper
-
 
