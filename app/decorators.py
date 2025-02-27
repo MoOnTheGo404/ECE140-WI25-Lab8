@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable, Optional, Dict, Any, List, Tuple
-from fastapi import Request, Response, HTTPException, Depends
-from fastapi.responses import RedirectResponse
+from fastapi import Request, Response, HTTPException, Depends, status
+from fastapi.responses import RedirectResponse, HTMLResponse
 import inspect
 import mysql.connector
 from mysql.connector import pooling
@@ -12,6 +12,11 @@ import time
 import json
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+
+from database import (
+    get_user_by_id,
+    get_session,
+)
 
 def auth_required(func: Callable) -> Callable:
     """
